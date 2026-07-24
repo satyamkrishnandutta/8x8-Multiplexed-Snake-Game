@@ -1,6 +1,6 @@
 # Hardware LED Matrix Snake 🐍
 
-**[Read the Full Technical Report (PDF)][Uploading 8x8_LED_Matrix_Arcade_Console.pdf…]()**
+[Read the Full Technical Report (PDF)](./8x8_LED_Matrix_Arcade_Console.pdf)
 
 A classic Snake game built using an ESP32, discrete 74-series logic ICs, and an 8x8 LED matrix. The entire circuit is manually routed and soldered onto a custom Vero board layout, demonstrating low-level hardware multiplexing alongside embedded C++ game logic.
 
