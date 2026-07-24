@@ -1,0 +1,204 @@
+#define DATA_PIN   32
+#define CLOCK_PIN  33
+#define LATCH_PIN  25
+
+// Directional inputs
+#define UP_BTN     26
+#define DOWN_BTN   27
+#define LEFT_BTN   14
+#define RIGHT_BTN  12
+
+#define MAX_LEN 64
+int snakeX[MAX_LEN];
+int snakeY[MAX_LEN];
+int length = 1;
+
+// Current direction vs buffered next direction (prevents the "instant 180-degree suicide" bug)
+int dx = 1, dy = 0;
+int nextDx = 1, nextDy = 0;
+
+int foodX, foodY;
+uint8_t frame[8];
+
+// Shove 16 bits of data into the daisy-chained 74HC595s
+void sendData(uint8_t rowData, uint8_t colData) {
+  // Pull latch LOW right away to isolate the output buffer and kill display ghosting
+  digitalWrite(LATCH_PIN, LOW);
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, colData);
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, rowData);
+  digitalWrite(LATCH_PIN, HIGH);
+}
+
+// Software debounce and state buffering so we don't freeze the matrix rendering
+void readButtons() {
+  // Read inputs and make sure the player isn't trying to reverse into their own body
+  if (digitalRead(UP_BTN) == LOW && dy != 1) {
+    nextDx = 0; nextDy = -1;
+  }
+  if (digitalRead(DOWN_BTN) == LOW && dy != -1) {
+    nextDx = 0; nextDy = 1;
+  }
+  if (digitalRead(LEFT_BTN) == LOW && dx != 1) {
+    nextDx = -1; nextDy = 0;
+  }
+  if (digitalRead(RIGHT_BTN) == LOW && dx != -1) {
+    nextDx = 1; nextDy = 0;
+  }
+}
+
+// Wipe the old frame from memory and draw the new positions
+void buildFrame() {
+  for (int i = 0; i < 8; i++) frame[i] = 0;
+  
+  // Draw body segments
+  for (int i = 0; i < length; i++) {
+    frame[snakeY[i]] |= (1 << snakeX[i]);
+  }
+  // Draw the apple
+  frame[foodY] |= (1 << foodX);
+}
+
+// The main Persistence of Vision (POV) multiplexing engine
+void displayFrame() {
+  // Refresh enough times per tick to trick the human eye (zero flicker)
+  for (int refresh = 0; refresh < 60; refresh++) {
+    for (int row = 0; row < 8; row++) {
+      
+      // Sneaking a button read into the render loop so inputs feel instant
+      readButtons();  
+
+      uint8_t rowData = (1 << row);
+      uint8_t colData = frame[row];
+
+      sendData(rowData, colData);
+      delayMicroseconds(800); // 800us is the sweet spot for maximum brightness and stability
+    }
+  }
+}
+
+// Keep rolling random coordinates until we find an empty spot
+void spawnFood() {
+  int attempts = 0;
+  while (attempts < 100) {
+    int fx = random(0, 8);
+    int fy = random(0, 8);
+
+    bool valid = true;
+
+    // Make sure it didn't spawn inside the snake's body
+    for (int i = 0; i < length; i++) {
+      if (snakeX[i] == fx && snakeY[i] == fy) {
+        valid = false;
+        break;
+      }
+    }
+
+    if (valid) {
+      foodX = fx;
+      foodY = fy;
+      return;
+    }
+
+    attempts++;
+  }
+  gameOver(); // If we looped 100 times, the board is maxed out. 
+}
+
+// Did I just bite myself?
+bool checkSelfCollision() {
+  for (int i = 1; i < length; i++) {
+    if (snakeX[0] == snakeX[i] && snakeY[0] == snakeY[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Flash the matrix to rub it in, then wait for a reset
+void gameOver() {
+  for (int k = 0; k < 5; k++) {
+    for (int row = 0; row < 8; row++) {
+      sendData((1 << row), 0xFF); // Blast all LEDs on
+      delay(50);
+    }
+    delay(200);
+  }
+  
+  // Wait in purgatory until the user mashes a button
+  while (true) {
+    if (digitalRead(UP_BTN) == LOW ||
+        digitalRead(DOWN_BTN) == LOW ||
+        digitalRead(LEFT_BTN) == LOW ||
+        digitalRead(RIGHT_BTN) == LOW) {
+      
+      // Reset everything to factory defaults
+      length = 1;
+      snakeX[0] = 4;
+      snakeY[0] = 3;
+      dx = 1; dy = 0;
+      nextDx = 1; nextDy = 0;
+      spawnFood();
+      return;
+    }
+  }
+}
+
+void setup() {
+  pinMode(DATA_PIN, OUTPUT);
+  pinMode(CLOCK_PIN, OUTPUT);
+  pinMode(LATCH_PIN, OUTPUT);
+  
+  // Using internal pullups saves us from wiring physical resistors on the vero board
+  pinMode(UP_BTN, INPUT_PULLUP);
+  pinMode(DOWN_BTN, INPUT_PULLUP);
+  pinMode(LEFT_BTN, INPUT_PULLUP);
+  pinMode(RIGHT_BTN, INPUT_PULLUP);
+  
+  snakeX[0] = 4;
+  snakeY[0] = 3;
+  
+  // Seed with analog noise so the randomizer doesn't repeat the same pattern on boot
+  randomSeed(analogRead(34));
+  spawnFood();
+}
+
+void loop() {
+  // Commit the buffered direction
+  dx = nextDx;
+  dy = nextDy;
+
+  // Shift all body segments backward in the array
+  for (int i = length - 1; i > 0; i--) {
+    snakeX[i] = snakeX[i - 1];
+    snakeY[i] = snakeY[i - 1];
+  }
+  
+  // Step the head forward
+  snakeX[0] += dx;
+  snakeY[0] += dy;
+
+  // Smashed into a wall?
+  if (snakeX[0] < 0 || snakeX[0] > 7 ||
+      snakeY[0] < 0 || snakeY[0] > 7) {
+    gameOver();
+  }
+
+  // Chomp
+  if (snakeX[0] == foodX && snakeY[0] == foodY) {
+    if (length < MAX_LEN) length++;
+    spawnFood();
+  }
+
+  if (checkSelfCollision()) {
+    gameOver();
+  }
+
+  // Update RAM and blast it to the hardware
+  buildFrame();
+  displayFrame();
+
+  // Dynamic difficulty: reduce the delay as the snake gets longer. Caps at 40ms to stay playable.
+  int speed = 150 - (length * 5);
+  if (speed < 40) speed = 40;
+  delay(speed);
+}
