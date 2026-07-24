@@ -61,7 +61,7 @@ The entire physical prototype was built on a highly cost-effective budget[cite: 
 > [Circuit Schematic]<img width="1920" height="1080" alt="Untitled design" src="https://github.com/user-attachments/assets/19233c17-08cd-4350-aac4-f7af521899b7" />
 > *Complete Circuit Schematic detailing the ESP32 to Shift Register cascading and Matrix wiring[cite: 1].*
 
-> [Vero Board Top View](<img width="933" height="1152" alt="image" src="https://github.com/user-attachments/assets/405fbc4d-217f-49f9-a528-dbd0be22f439" />)
+> [Vero Board Top View]<img width="933" height="1152" alt="image" src="https://github.com/user-attachments/assets/405fbc4d-217f-49f9-a528-dbd0be22f439" />
 > *Top view showing the IC placement and matrix.*
 
 > ![Bottom Solder Joints](./images/board_bottom.jpg)
