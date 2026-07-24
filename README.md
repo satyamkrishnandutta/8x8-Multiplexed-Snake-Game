@@ -58,10 +58,10 @@ The entire physical prototype was built on a highly cost-effective budget[cite: 
 **Solution:** Using a standard `delay()` to debounce would have ruined the 800-microsecond display refresh rate[cite: 1]. Instead, a software-level state buffer (`nextDx`, `nextDy`) was implemented to ensure only one valid, orthogonal directional change is executed per game tick[cite: 1].
 
 ## 📸 Media
-> ![Circuit Schematic]<img width="1920" height="1080" alt="Untitled design" src="https://github.com/user-attachments/assets/19233c17-08cd-4350-aac4-f7af521899b7" />
+> [Circuit Schematic]<img width="1920" height="1080" alt="Untitled design" src="https://github.com/user-attachments/assets/19233c17-08cd-4350-aac4-f7af521899b7" />
 > *Complete Circuit Schematic detailing the ESP32 to Shift Register cascading and Matrix wiring[cite: 1].*
 
-> ![Vero Board Top View](./images/board_top.jpg)
+> [Vero Board Top View](<img width="933" height="1152" alt="image" src="https://github.com/user-attachments/assets/405fbc4d-217f-49f9-a528-dbd0be22f439" />)
 > *Top view showing the IC placement and matrix.*
 
 > ![Bottom Solder Joints](./images/board_bottom.jpg)
