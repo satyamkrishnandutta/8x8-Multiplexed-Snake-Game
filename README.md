@@ -65,7 +65,12 @@ The entire physical prototype was built on a highly cost-effective budget.
 
 > ![Bottom Solder Joints]<img width="1145" height="1293" alt="IMG_20260323_224703716 jpg" src="https://github.com/user-attachments/assets/32ee2858-59d5-40de-ac38-88f577448f26" />
 > *Bottom view demonstrating the point-to-point solder routing.*
-<video width="600" src="./gameplay.mp4" controls="controls"></video>
+
+
+
+https://github.com/user-attachments/assets/97b803db-4d5d-4aa7-ae47-a2fe17b83680
+
+
 
 ---
 *Created by Satyam Krishnan Dutta - Electronics & Communication Engineering, NIT Jamshedpur*
